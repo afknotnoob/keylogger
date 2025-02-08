@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid black; }
+    </style>
+</head>
+<body>
+    <h2>Key Logger Dashboard</h2>
+
+    <h3>Checkout a Key</h3>
+    <input type="text" id="staff_rfid" placeholder="Staff RFID">
+    <input type="text" id="key_rfid" placeholder="Key RFID">
+    <input type="number" id="duration" placeholder="Duration (minutes)">
+    <button onclick="checkoutKey()">Checkout Key</button>
+
+    <h3>Return a Key</h3>
+    <input type="text" id="return_staff_rfid" placeholder="Staff RFID">
+    <input type="text" id="return_key_rfid" placeholder="Key RFID">
+    <button onclick="returnKey()">Return Key</button>
+
+    <h3>Logs</h3>
+    <table id="logTable">
+        <tr>
+            <th>Staff RFID</th>
+            <th>Key RFID</th>
+            <th>Checkout Time</th>
+            <th>Due Time</th>
+            <th>Returned</th>
+        </tr>
+    </table>
+
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        function checkoutKey() {
+            const staff_rfid = document.getElementById("staff_rfid").value;
+            const key_rfid = document.getElementById("key_rfid").value;
+            const duration = document.getElementById("duration").value;
+
+            fetch("http://127.0.0.1:5000/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ staff_rfid, key_rfid, duration }),
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+        }
+
+        function returnKey() {
+            const staff_rfid = document.getElementById("return_staff_rfid").value;
+            const key_rfid = document.getElementById("return_key_rfid").value;
+
+            fetch("http://127.0.0.1:5000/return", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ staff_rfid, key_rfid }),
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+        }
+
+        function fetchLogs() {
+            fetch("http://127.0.0.1:5000/logs", {
+                method: "GET",
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById("logTable");
+                table.innerHTML = `<tr>
+                    <th>Staff RFID</th>
+                    <th>Key RFID</th>
+                    <th>Checkout Time</th>
+                    <th>Due Time</th>
+                    <th>Returned</th>
+                </tr>`; // Reset table
+
+                data.forEach(log => {
+                    const row = `<tr>
+                        <td>${log.staff_rfid}</td>
+                        <td>${log.key_rfid}</td>
+                        <td>${log.checkout_time}</td>
+                        <td>${log.due_time}</td>
+                        <td>${log.returned ? "Yes" : "No"}</td>
+                    </tr>`;
+                    table.innerHTML += row;
+                });
+            });
+        }
+
+        function logout() {
+            fetch("http://127.0.0.1:5000/logout", {
+                method: "POST",
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                window.location.href = "login.html";
+            });
+        }
+
+        // Fetch logs when the page loads
+        fetchLogs();
+    </script>
+</body>
+</html>
