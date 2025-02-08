@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_bcrypt import Bcrypt
 from config import Config
-from models import db
+from models import db, KeyLog
 from routes import routes
 import threading
 import time
