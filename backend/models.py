@@ -1,9 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 from datetime import datetime
 
-db = SQLAlchemy
 
-class User(db.model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)

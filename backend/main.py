@@ -1,9 +1,8 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from extensions import *
 from flask_session import Session
-from flask_bcrypt import Bcrypt
 from config import Config
-from models import db, KeyLog
+from models import KeyLog, User
 from routes import routes
 import threading
 import time
