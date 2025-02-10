@@ -2,7 +2,7 @@ from flask import Flask
 from extensions import *
 from flask_session import Session
 from config import Config
-from models import KeyLog, User
+from models import KeyLog
 from routes import routes
 import threading
 import time

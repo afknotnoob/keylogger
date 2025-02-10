@@ -1,9 +1,6 @@
 from flask import Blueprint, request, jsonify, session, send_from_directory
-from extensions import db
-from models import User, KeyLog
-from flask_bcrypt import Bcrypt
-from datetime import datetime, timedelta
-import os
+from backend.extensions import *
+from models import User
 
 routes = Blueprint('routes', __name__)
 bcrypt = Bcrypt()
