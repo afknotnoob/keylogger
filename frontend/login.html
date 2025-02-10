@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superuser Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        input, button { margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Superuser Login</h2>
+    <input type="email" id="email" placeholder="Enter Email">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+
+    <p id="message"></p>
+
+    <script>
+        function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            fetch("http://127.0.0.1:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("message").textContent = data.message;
+                if (data.message === "Login successful") {
+                    window.location.href = "dashboard.html";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
