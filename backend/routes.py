@@ -22,9 +22,13 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    # Remove authentication check, just assume login is successful
-    session["user"] = email  # Store user session
-    return jsonify({"message": "Login successful"})
+    user = User.query.filter_by(email=email).first()  # Fetch user from DB
+
+    if user and bcrypt.check_password_hash(user.password, password):
+        session["user"] = email  # Store user session
+        return jsonify({"message": "Login successful"})
+    else:
+        return jsonify({"error": "Invalid email or password"}), 401
 
 @routes.route('/logout', methods=['POST'])
 def logout():
