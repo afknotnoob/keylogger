@@ -12,6 +12,8 @@ def serve_login():
 
 @routes.route('/dashboard')
 def serve_dashboard():
+    if "user" not in session:
+        return jsonify({"error": "Unauthorized"}), 401  # Prevent unauthorized access
     return send_from_directory('../frontend', 'dashboard.html')
 
 @routes.route('/login', methods=['POST'])
