@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session, send_from_directory
-from backend.extensions import *
+from extensions import *
 from models import User
 
 routes = Blueprint('routes', __name__)
@@ -12,8 +12,6 @@ def serve_login():
 
 @routes.route('/dashboard')
 def serve_dashboard():
-    if 'user_id' not in session:
-        return send_from_directory('../frontend', 'login.html')
     return send_from_directory('../frontend', 'dashboard.html')
 
 @routes.route('/login', methods=['POST'])

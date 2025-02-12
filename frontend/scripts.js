@@ -7,16 +7,19 @@ function login() {
     fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include"
+        body: JSON.stringify({ email, password })
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById("message").textContent = data.message;
-        if (data.message === "Login successful") {
-            window.location.href = "dashboard.html";
+    .then(async response => {
+        console.log("Response status:", response.status);
+        let data = await response.json(); 
+        console.log("Response body:", data);
+    
+        document.getElementById("message").textContent = data.message || "Login failed";
+        if (response.ok) {
+            window.location.href = "/dashboard.html";
         }
-    });
+    })
+    .catch(error => console.error("Error:", error));
 }
 
 
@@ -40,7 +43,6 @@ function checkoutKey() {
     fetch(`${API_BASE_URL}/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ staff_rfid, key_rfid, duration })
     })
     .then(response => response.json())
