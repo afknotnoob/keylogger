@@ -14,7 +14,7 @@ function login() {
         let data = await response.json(); 
         console.log("Response body:", data);
     
-        document.getElementById("message").textContent = data.message || "Login failed";
+        document.getElementById("message").textContent = data.message || "Invalid Email ID or password";
         if (response.ok) {
             window.location.href = "/dashboard.html";
         }

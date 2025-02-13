@@ -1,6 +1,7 @@
-from flask import Blueprint, request, jsonify, session, send_from_directory
+from flask import Flask, Blueprint, request, jsonify, session, send_from_directory
 from extensions import *
-from models import User
+from models import *
+from datetime import datetime, timedelta
 
 routes = Blueprint('routes', __name__)
 bcrypt = Bcrypt()
@@ -28,12 +29,63 @@ def login():
         session["user"] = email  # Store user session
         return jsonify({"message": "Login successful"})
     else:
-        return jsonify({"error": "Invalid email or password"}), 401
+        return jsonify({"error": "Invalid email or password"})
 
 @routes.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
     return jsonify({"redirect": "/login"})
+
+@routes.route('/checkout', methods=['POST'])
+def checkout_key():
+    data = request.json
+    staff_rfid = data.get('staff_rfid')
+    key_rfid = data.get('key_rfid')
+    duration = int(data.get('duration'))
+        
+    if not staff_rfid or not key_rfid or not duration:
+        return jsonify({'message': 'Missing required fields'}), 400
+        
+    checkout_time = datetime.utcnow()
+    due_time = checkout_time + timedelta(minutes=duration)
+        
+    new_log = KeyLog(staff_rfid=staff_rfid, key_rfid=key_rfid, checkout_time=checkout_time, due_time=due_time, returned=False)
+    db.session.add(new_log)
+    db.session.commit()
+        
+    return jsonify({'message': 'Key checked out successfully'})
+
+@routes.route('/return', methods=['POST'])
+def return_key():
+    data = request.json
+    staff_rfid = data.get('staff_rfid')
+    key_rfid = data.get('key_rfid')
+        
+    if not staff_rfid or not key_rfid:
+        return jsonify({'message': 'Missing required fields'}), 400
+        
+    log_entry = KeyLog.query.filter_by(staff_rfid=staff_rfid, key_rfid=key_rfid, returned=False).first()
+        
+    if not log_entry:
+        return jsonify({'message': 'No active checkout found for this key'}), 404
+        
+    log_entry.returned = True
+    db.session.commit()
+        
+    return jsonify({'message': 'Key returned successfully'})
+    
+@routes.route('/logs', methods=['GET'])
+def fetch_logs():
+    logs = KeyLog.query.all()
+    log_list = [{
+        'staff_rfid': log.staff_rfid,
+        'key_rfid': log.key_rfid,
+        'checkout_time': log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
+        'due_time': log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
+        'returned': log.returned
+    } for log in logs]
+        
+    return jsonify(log_list)
 
 @routes.route('/<path:filename>')
 def serve_static_files(filename):
