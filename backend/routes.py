@@ -76,16 +76,31 @@ def return_key():
     
 @routes.route('/logs', methods=['GET'])
 def fetch_logs():
-    logs = KeyLog.query.all()
+    page = request.args.get('page', 1, type=int)  # Get page number from query parameters, default = 1
+    per_page = request.args.get('per_page', 10, type=int)  # Get logs per page, default = 10
+
+    # Query logs, order by checkout_time DESC (latest first), and paginate
+    logs = KeyLog.query.order_by(KeyLog.checkout_time.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
     log_list = [{
         'staff_rfid': log.staff_rfid,
         'key_rfid': log.key_rfid,
         'checkout_time': log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
         'due_time': log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
         'returned': log.returned
-    } for log in logs]
-        
-    return jsonify(log_list)
+    } for log in logs.items]  # Use `.items` to get the paginated data
+
+    # Return JSON with pagination metadata
+    return jsonify({
+        'logs': log_list,
+        'total_logs': logs.total,
+        'current_page': logs.page,
+        'total_pages': logs.pages,
+        'has_next': logs.has_next,
+        'has_prev': logs.has_prev,
+        'next_page': logs.next_num if logs.has_next else None,
+        'prev_page': logs.prev_num if logs.has_prev else None
+    })
 
 @routes.route('/<path:filename>')
 def serve_static_files(filename):

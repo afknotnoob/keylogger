@@ -10,6 +10,7 @@
         input, button { margin: 10px; padding: 10px; }
         table { width: 80%; margin: 20px auto; border-collapse: collapse; }
         th, td { padding: 10px; border: 1px solid black; }
+        .pagination { margin-top: 20px; }
     </style>
 </head>
 <div class="container">
@@ -29,18 +30,56 @@
 
     <h3>Logs</h3>
     <table id="logTable">
-        <tr>
-            <th>Staff RFID</th>
-            <th>Key RFID</th>
-            <th>Checkout Time</th>
-            <th>Due Time</th>
-            <th>Returned</th>
-        </tr>
+        <thead>
+            <tr>
+                <th>Staff RFID</th>
+                <th>Key RFID</th>
+                <th>Checkout Time</th>
+                <th>Due Time</th>
+                <th>Returned</th>
+            </tr>
+        </thead>
+        <tbody id="logTableBody">
+            <!-- Logs will be dynamically inserted here -->
+        </tbody>
     </table>
+
+    <!-- Pagination Controls -->
+    <div id="pagination" class="pagination"></div>
 
     <button onclick="logout()">Logout</button>
 
     <script>
+        let currentPage = 1;
+        const perPage = 10;
+
+        function fetchLogs(page = 1) {
+            fetch(`/logs?page=${page}&per_page=${perPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById("logTableBody");
+                    tableBody.innerHTML = ""; // Clear previous logs
+
+                    data.logs.forEach(log => {
+                        const row = `<tr>
+                            <td>${log.staff_rfid}</td>
+                            <td>${log.key_rfid}</td>
+                            <td>${log.checkout_time}</td>
+                            <td>${log.due_time}</td>
+                            <td>${log.returned ? "Yes" : "No"}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // Pagination Controls
+                    document.getElementById("pagination").innerHTML = `
+                        ${data.has_prev ? `<button onclick="fetchLogs(${data.prev_page})">Previous</button>` : ""}
+                        <span> Page ${data.current_page} of ${data.total_pages} </span>
+                        ${data.has_next ? `<button onclick="fetchLogs(${data.next_page})">Next</button>` : ""}
+                    `;
+                });
+        }
+
         function checkoutKey() {
             const staff_rfid = document.getElementById("staff_rfid").value;
             const key_rfid = document.getElementById("key_rfid").value;
@@ -53,7 +92,10 @@
                 credentials: "include"
             })
             .then(response => response.json())
-            .then(data => alert(data.message));
+            .then(data => {
+                alert(data.message);
+                fetchLogs(currentPage); // Refresh logs after checkout
+            });
         }
 
         function returnKey() {
@@ -67,35 +109,9 @@
                 credentials: "include"
             })
             .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function fetchLogs() {
-            fetch("http://127.0.0.1:5000/logs", {
-                method: "GET",
-                credentials: "include"
-            })
-            .then(response => response.json())
             .then(data => {
-                const table = document.getElementById("logTable");
-                table.innerHTML = `<tr>
-                    <th>Staff RFID</th>
-                    <th>Key RFID</th>
-                    <th>Checkout Time</th>
-                    <th>Due Time</th>
-                    <th>Returned</th>
-                </tr>`; // Reset table
-
-                data.forEach(log => {
-                    const row = `<tr>
-                        <td>${log.staff_rfid}</td>
-                        <td>${log.key_rfid}</td>
-                        <td>${log.checkout_time}</td>
-                        <td>${log.due_time}</td>
-                        <td>${log.returned ? "Yes" : "No"}</td>
-                    </tr>`;
-                    table.innerHTML += row;
-                });
+                alert(data.message);
+                fetchLogs(currentPage); // Refresh logs after return
             });
         }
 
@@ -106,13 +122,13 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
+                alert("You've been logged out.");
                 window.location.href = "login.html";
             });
         }
 
         // Fetch logs when the page loads
-        fetchLogs();
+        document.addEventListener("DOMContentLoaded", () => fetchLogs());
     </script>
 </body>
 </div>
