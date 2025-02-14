@@ -27,9 +27,9 @@ def login():
 
     if user and bcrypt.check_password_hash(user.password, password):
         session["user"] = email  # Store user session
-        return jsonify({"message": "Login successful"})
+        return jsonify({"message": "Login successful"}), 200
     else:
-        return jsonify({"error": "Invalid email or password"})
+        return jsonify({"error": "Invalid email or password"}), 500
 
 @routes.route('/logout', methods=['POST'])
 def logout():
