@@ -1,7 +1,11 @@
-from flask import Blueprint, request, jsonify, session, send_from_directory
+import io
+from flask import Blueprint, request, jsonify, send_file, session, send_from_directory
+import pandas as pd
 from extensions import *
 from models import *
 from datetime import datetime, timedelta
+import subprocess
+
 
 routes = Blueprint('routes', __name__)
 bcrypt = Bcrypt()
@@ -113,6 +117,36 @@ def fetch_logs():
         'prev_page': logs.prev_num if logs.has_prev else None
     })
 
-@routes.route('/<path:filename>')
-def serve_static_files(filename):
-    return send_from_directory('../frontend', filename)
+@routes.route('/clear_logs', methods=['POST'])
+def clear_logs():
+    try:
+        subprocess.run(["python", "clear_table.py", "KeyLog"], check=True)
+        return jsonify({"message": "Key logs cleared successfully"}), 200
+    except subprocess.CalledProcessError:
+        return jsonify({"error": "Failed to clear key logs"}), 500
+    
+@routes.route('/download_logs', methods=['GET'])
+def download_logs():
+    logs = KeyLog.query.all()
+    data = []
+    
+    for log in logs:
+        staff_member = staff.query.filter_by(staff_rfid=log.staff_rfid).first()
+        key_item = keys.query.filter_by(key_rfid=log.key_rfid).first()
+        
+        data.append({
+            "Staff Name": staff_member.staff_name if staff_member else "Unknown",
+            "Key Name": key_item.key_name if key_item else "Unknown",
+            "Checkout Time": log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
+            "Due Time": log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
+            "Returned": "Yes" if log.returned else "No"
+        })
+    
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Key Logs')
+    writer.close()
+    output.seek(0)
+    
+    return send_file(output, download_name="key_logs.xlsx", as_attachment=True, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
