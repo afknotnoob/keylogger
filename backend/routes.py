@@ -76,10 +76,9 @@ def return_key():
     
 @routes.route('/logs', methods=['GET'])
 def fetch_logs():
-    page = request.args.get('page', 1, type=int)  # Get page number from query parameters, default = 1
-    per_page = request.args.get('per_page', 10, type=int)  # Get logs per page, default = 10
+    page = request.args.get('page', 1, type=int)  
+    per_page = request.args.get('per_page', 20, type=int) 
 
-    # Query logs, order by checkout_time DESC (latest first), and paginate
     logs = KeyLog.query.order_by(KeyLog.checkout_time.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     log_list = [{
@@ -88,9 +87,8 @@ def fetch_logs():
         'checkout_time': log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
         'due_time': log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
         'returned': log.returned
-    } for log in logs.items]  # Use `.items` to get the paginated data
+    } for log in logs.items] 
 
-    # Return JSON with pagination metadata
     return jsonify({
         'logs': log_list,
         'total_logs': logs.total,

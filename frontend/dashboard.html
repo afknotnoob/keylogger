@@ -51,7 +51,7 @@
 
     <script>
         let currentPage = 1;
-        const perPage = 10;
+        const perPage = 20;
 
         function fetchLogs(page = 1) {
             fetch(`/logs?page=${page}&per_page=${perPage}`)
