@@ -72,8 +72,8 @@ function fetchLogs() {
     .then(data => {
         const table = document.getElementById("logTable");
         table.innerHTML = `<tr>
-            <th>Staff RFID</th>
-            <th>Key RFID</th>
+            <th>Staff Name</th>
+            <th>Key Name</th>
             <th>Checkout Time</th>
             <th>Due Time</th>
             <th>Returned</th>
@@ -81,8 +81,8 @@ function fetchLogs() {
 
         data.forEach(log => {
             const row = `<tr>
-                <td>${log.staff_rfid}</td>
-                <td>${log.key_rfid}</td>
+                <td>${log.staff_name}</td>
+                <td>${log.key_name}</td>
                 <td>${log.checkout_time}</td>
                 <td>${log.due_time}</td>
                 <td>${log.returned ? "Yes" : "No"}</td>

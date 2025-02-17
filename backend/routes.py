@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, request, jsonify, session, send_from_directory
+from flask import Blueprint, request, jsonify, session, send_from_directory
 from extensions import *
 from models import *
 from datetime import datetime, timedelta
@@ -45,6 +45,14 @@ def checkout_key():
         
     if not staff_rfid or not key_rfid or not duration:
         return jsonify({'message': 'Missing required fields'}), 400
+    
+    staff_member = staff.query.filter_by(staff_rfid=staff_rfid).first()
+    if not staff_member:
+        return jsonify({'message': 'Staff not found'}), 404
+    
+    key_item = keys.query.filter_by(key_rfid=key_rfid).first()
+    if not key_item:
+        return jsonify({'message': 'Key not found'}), 404
         
     checkout_time = datetime.utcnow()
     due_time = checkout_time + timedelta(minutes=duration)
@@ -81,13 +89,18 @@ def fetch_logs():
 
     logs = KeyLog.query.order_by(KeyLog.checkout_time.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
-    log_list = [{
-        'staff_rfid': log.staff_rfid,
-        'key_rfid': log.key_rfid,
-        'checkout_time': log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
-        'due_time': log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
-        'returned': log.returned
-    } for log in logs.items] 
+    log_list = []
+    for log in logs.items:
+        staff_member = staff.query.filter_by(staff_rfid=log.staff_rfid).first()
+        key_item = keys.query.filter_by(key_rfid=log.key_rfid).first()
+        
+        log_list.append({
+            'staff_name': staff_member.staff_name if staff_member else 'Unknown',
+            'key_name': key_item.key_name if key_item else 'Unknown',
+            'checkout_time': log.checkout_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'due_time': log.due_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'returned': log.returned
+        }) 
 
     return jsonify({
         'logs': log_list,

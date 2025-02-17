@@ -20,7 +20,7 @@ def add_staff(employee_id, staff_name, staff_rfid=None):
         db.session.commit()
         print(f"Staff {staff_name} added successfully with Employee ID {employee_id}.")
 
-# Example Usage:
+
 if __name__ == "__main__":
     employee_id = input("Enter Employee ID: ")
     staff_name = input("Enter Staff Name: ")
